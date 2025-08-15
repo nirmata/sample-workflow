@@ -1,0 +1,51 @@
+# Multi-stage Dockerfile with security violations
+FROM node:latest AS builder
+
+# Install packages as root (violation)
+RUN npm install -g typescript webpack
+
+# Copy source without proper ownership
+COPY . /src
+WORKDIR /src
+
+# Build with insecure flags (violation)
+RUN npm install --unsafe-perm && \
+    npm run build
+
+# Production stage
+FROM node:alpine
+
+# Run as root (violation)
+USER root
+
+# Install unnecessary packages (violation)
+RUN apk add --no-cache \
+    curl \
+    wget \
+    vim \
+    bash \
+    && rm -rf /var/cache/apk/*
+
+# Copy built files
+COPY --from=builder /src/dist /app
+COPY --from=builder /src/node_modules /app/node_modules
+
+# Set insecure permissions (violation)
+RUN chmod -R 777 /app
+
+# Create insecure user with shell access (violation)
+RUN addgroup -g 1000 -S nodejs && \
+    adduser -S nextjs -u 1000 -G nodejs
+
+# Switch to user but keep root capabilities (violation)
+USER nextjs
+
+# Expose port
+EXPOSE 3000
+
+# Health check with shell (violation)
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3000/ || exit 1
+
+# Run with shell (violation)
+CMD ["/bin/bash", "-c", "npm start"]

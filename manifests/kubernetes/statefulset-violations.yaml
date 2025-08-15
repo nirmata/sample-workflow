@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: insecure-statefulset
+  namespace: default
+  labels:
+    app: insecure-stateful-app
+spec:
+  serviceName: "insecure-stateful-service"
+  replicas: 2
+  selector:
+    matchLabels:
+      app: insecure-stateful-app
+  template:
+    metadata:
+      labels:
+        app: insecure-stateful-app
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+      - name: insecure-stateful-container
+        image: postgres:13
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRES_PASSWORD
+          value: "postgres123"
+        - name: POSTGRES_USER
+          value: "postgres"
+        - name: POSTGRES_DB
+          value: "testdb"
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        - name: postgres-config
+          mountPath: /etc/postgresql/postgresql.conf
+          subPath: postgresql.conf
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+          allowPrivilegeEscalation: true
+          capabilities:
+            add:
+            - SYS_ADMIN
+            - NET_ADMIN
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      volumes:
+      - name: postgres-config
+        configMap:
+          name: postgres-config
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: default
+data:
+  postgresql.conf: |
+    # Insecure PostgreSQL configuration
+    listen_addresses = '*'
+    password_encryption = off
+    ssl = off
+    log_statement = 'all'
+    log_connections = on
+    log_disconnections = on

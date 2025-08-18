@@ -1,13 +1,12 @@
-name: Nirmata nctl Scan (Kyverno Pod Security & RBAC)
+name: Nirmata nctl Scan (Kyverno PodSecurity & RBAC)
 
 on:
   pull_request:
     branches: [ main ]
   push:
     branches: [ main ]
-  # Optionally, schedule regular scans:
   schedule:
-    - cron: '0 0 * * *'  # runs daily at midnight UTC
+    - cron: '0 0 * * *' # daily scan at midnight UTC
 
 jobs:
   scan:
@@ -24,15 +23,31 @@ jobs:
 
       - name: Install nctl
         uses: nirmata/action-install-nctl-scan@v0.0.11
-        # Latest release as of April 2025  [oai_citation:0‡GitHub](https://github.com/nirmata/action-install-nctl-scan?utm_source=chatgpt.com)
 
       - name: Verify nctl version
         run: nctl version
 
-      - name: Run nctl scan — Pod-Security baseline + restricted, RBAC
+      - name: Fetch curated Kyverno policies
+        run: |
+          git clone https://github.com/nirmata/kyverno-policies.git
+
+      - name: Run nctl scan (PodSecurity + RBAC)
         run: |
           nctl scan repository \
-            --policies kyverno-policies/pod-security \
+            --policies kyverno-policies/pod-security/baseline \
+            --policies kyverno-policies/pod-security/restricted \
             --policies kyverno-policies/rbac-best-practices \
             --details \
             --publish
+
+      - name: Provide next steps
+        run: |
+          echo "✅ NCTL scan completed."
+          echo ""
+          echo "👉 Review policy violations here:"
+          echo "   https://www.nirmata.io/webclient/#clusters/policyReport/repositoryDetails?repo=https%3A%2F%2Fgithub.com%2Fnirmata%2Fsample-polex&backurl=clustersPolicyReport%2Frepositories&filter.status.value=fail"
+          echo ""
+          echo "👉 Create policy exceptions here:"
+          echo "   https://www.nirmata.io/webclient/#clusters/policyReport/repositoryDetails?repo=https%3A%2F%2Fgithub.com%2Fnirmata%2Fsample-polex&backurl=clustersPolicyReport%2Frepositories&filter.status.value=fail"
+          echo ""
+          echo "📊 Results are also available in the Nirmata Control Hub."

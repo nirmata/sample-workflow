@@ -27,10 +27,13 @@ jobs:
       - name: Verify nctl version
         run: nctl version
 
+      - name: Debug check env (safe)
+        run: |
+          echo "NIRMATA_URL is: $NIRMATA_URL"
+          echo "NIRMATA_TOKEN length: ${#NIRMATA_TOKEN}"
       - name: Login to Nirmata
         run: |
           nctl login nch --url $NIRMATA_URL --token $NIRMATA_TOKEN
-
       - name: Run nctl scan (PodSecurity)
         run: |
           nctl scan repository \

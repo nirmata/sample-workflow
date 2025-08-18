@@ -30,8 +30,7 @@ jobs:
       - name: Run nctl scan (PodSecurity)
         run: |
           nctl scan repository \
-            --policies https://github.com/nirmata/kyverno-policies/tree/main/pod-security/baseline \
-            --policies https://github.com/nirmata/kyverno-policies/tree/main/pod-security/restricted \
+            --policies kyverno-policies/ \
             --details \
             --publish
 

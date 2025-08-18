@@ -27,6 +27,10 @@ jobs:
       - name: Verify nctl version
         run: nctl version
 
+      - name: Login to Nirmata
+        run: |
+          nctl login --url $NIRMATA_URL --token $NIRMATA_TOKEN
+
       - name: Run nctl scan (PodSecurity)
         run: |
           nctl scan repository \

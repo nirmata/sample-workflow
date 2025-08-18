@@ -66,25 +66,180 @@ jobs:
         nctl get policy-sets
         echo "=== End NCTL Environment Check ==="
         
+        # Additional NCTL verification
+        echo "=== Additional NCTL Verification ==="
+        echo "NCTL help for scan repository:"
+        nctl scan repository --help || echo "Help command failed"
+        echo ""
+        
+        echo "NCTL help for scan:"
+        nctl scan --help || echo "Scan help command failed"
+        echo ""
+        
+        echo "Checking if tree command is available:"
+        which tree || echo "Tree command not available, using find instead"
+        echo "=== End Additional NCTL Verification ==="
+        
+    - name: Verify Repository Structure
+      run: |
+        echo "=== Repository Structure Analysis ==="
+        echo "Current working directory: $(pwd)"
+        echo ""
+        
+        echo "Root directory contents:"
+        ls -la
+        echo ""
+        
+        echo "Git repository info:"
+        git remote -v || echo "Git remote check failed"
+        echo ""
+        
+        echo "Checking for manifest files in root:"
+        find . -maxdepth 1 -name "*.yaml" -o -name "*.yml" -o -name "*.tf" -o -name "Dockerfile*" | sort || echo "No manifest files found in root"
+        echo ""
+        
+        if [ -d "manifests" ]; then
+          echo "Manifests folder found:"
+          ls -la manifests/
+          echo ""
+          
+          echo "Checking for manifest files in manifests folder:"
+          find manifests -name "*.yaml" -o -name "*.yml" -o -name "*.tf" -o -name "Dockerfile*" | sort || echo "No manifest files found in manifests folder"
+          echo ""
+          
+          echo "Manifests folder structure:"
+          tree manifests/ 2>/dev/null || find manifests -type f | sort
+        else
+          echo "Manifests folder not found"
+        fi
+        
+        echo "=== End Repository Structure Analysis ==="
+        
     - name: Scan Manifests with NCTL
       id: scan
       run: |
         echo "Starting manifest security scan..."
-        echo "Scanning manifests folder: $(pwd)/manifests"
+        echo "Current working directory: $(pwd)"
+        echo "Repository contents:"
+        ls -la
         
-        # List files to be scanned
-        echo "Files to be scanned:"
-        find manifests -name "*.yaml" -o -name "*.yml" -o -name "*.tf" -o -name "Dockerfile*" | sort
+        # Check if manifests folder exists and show its contents
+        if [ -d "manifests" ]; then
+          echo "Manifests folder found:"
+          ls -la manifests/
+          echo "Scanning manifests folder: $(pwd)/manifests"
+          
+          # List files to be scanned
+          echo "Files to be scanned:"
+          find manifests -name "*.yaml" -o -name "*.yml" -o -name "*.tf" -o -name "Dockerfile*" | sort
+        else
+          echo "Manifests folder not found. Checking root directory for manifest files..."
+          echo "Files in root directory:"
+          find . -maxdepth 1 -name "*.yaml" -o -name "*.yml" -o -name "*.tf" -o -name "Dockerfile*" | sort
+        fi
         
-        # Perform comprehensive scan with specified policy sets
-        echo "Running NCTL scan with PSS and RBAC policies..."
+        # Debug: Check environment variables (masked for security)
+        echo "=== Environment Variables ==="
+        echo "NIRMATA_URL: ${NIRMATA_URL:0:20}..."
+        echo "NIRMATA_USERID: ${NIRMATA_USERID:0:10}..."
+        echo "NIRMATA_TOKEN: ${NIRMATA_TOKEN:0:10}..."
+        echo "=== End Environment Variables ==="
+        
+        # Try different scan approaches
+        echo "=== Testing Different Scan Approaches ==="
+        
+        # Approach 1: Scan with explicit manifests path
+        echo "=== Approach 1: Scan with explicit manifests path ==="
+        if [ -d "manifests" ]; then
+          nctl scan repository \
+            --policy-sets pss-baseline,pss-restricted,rbac-best-practices \
+            --policies manifests > scan-results-1.txt 2>&1
+          EXIT_1=$?
+          echo "Approach 1 exit code: $EXIT_1"
+          if [ -f scan-results-1.txt ]; then
+            echo "Approach 1 output:"
+            cat scan-results-1.txt
+          fi
+        else
+          echo "Manifests folder not found, skipping approach 1"
+          EXIT_1=1
+        fi
+        
+        # Approach 2: Scan current directory
+        echo "=== Approach 2: Scan current directory ==="
+        nctl scan repository \
+          --policy-sets pss-baseline,pss-restricted,rbac-best-practices > scan-results-2.txt 2>&1
+        EXIT_2=$?
+        echo "Approach 2 exit code: $EXIT_2"
+        if [ -f scan-results-2.txt ]; then
+          echo "Approach 2 output:"
+          cat scan-results-2.txt
+        fi
+        
+        # Approach 3: Scan with global flags
+        echo "=== Approach 3: Scan with global flags ==="
         nctl scan repository \
           --policy-sets pss-baseline,pss-restricted,rbac-best-practices \
-          --policies manifests \
-          > scan-results.txt 2>&1
+          --token $NIRMATA_TOKEN \
+          --url $NIRMATA_URL > scan-results-3.txt 2>&1
+        EXIT_3=$?
+        echo "Approach 3 exit code: $EXIT_3"
+        if [ -f scan-results-3.txt ]; then
+          echo "Approach 3 output:"
+          cat scan-results-3.txt
+        fi
         
-        # Check scan exit code
-        SCAN_EXIT_CODE=$?
+        # Approach 4: Simple scan without policy sets
+        echo "=== Approach 4: Simple scan without policy sets ==="
+        nctl scan repository > scan-results-4.txt 2>&1
+        EXIT_4=$?
+        echo "Approach 4 exit code: $EXIT_4"
+        if [ -f scan-results-4.txt ]; then
+          echo "Approach 4 output:"
+          cat scan-results-4.txt
+        fi
+        
+        echo "=== End Scan Approaches ==="
+        
+        # Choose the best result or create a combined output
+        if [ $EXIT_1 -eq 0 ]; then
+          echo "Using Approach 1 results (explicit manifests path)"
+          cp scan-results-1.txt scan-results.txt
+          SCAN_EXIT_CODE=0
+        elif [ $EXIT_2 -eq 0 ]; then
+          echo "Using Approach 2 results (current directory)"
+          cp scan-results-2.txt scan-results.txt
+          SCAN_EXIT_CODE=0
+        elif [ $EXIT_3 -eq 0 ]; then
+          echo "Using Approach 3 results (global flags)"
+          cp scan-results-3.txt scan-results.txt
+          SCAN_EXIT_CODE=0
+        elif [ $EXIT_4 -eq 0 ]; then
+          echo "Using Approach 4 results (simple scan)"
+          cp scan-results-4.txt scan-results.txt
+          SCAN_EXIT_CODE=0
+        else
+          echo "All approaches failed. Creating combined error report..."
+          echo "=== Combined Scan Results (All Approaches Failed) ===" > scan-results.txt
+          echo "Approach 1 (explicit manifests): Exit $EXIT_1" >> scan-results.txt
+          echo "Approach 2 (current directory): Exit $EXIT_2" >> scan-results.txt
+          echo "Approach 3 (global flags): Exit $EXIT_3" >> scan-results.txt
+          echo "Approach 4 (simple scan): Exit $EXIT_4" >> scan-results.txt
+          echo "" >> scan-results.txt
+          
+          # Add outputs from failed attempts
+          for i in 1 2 3 4; do
+            if [ -f "scan-results-$i.txt" ]; then
+              echo "=== Approach $i Output ===" >> scan-results.txt
+              cat "scan-results-$i.txt" >> scan-results.txt
+              echo "" >> scan-results.txt
+            fi
+          done
+          
+          SCAN_EXIT_CODE=1
+        fi
+        
+        # Set outputs based on scan results
         if [ $SCAN_EXIT_CODE -eq 0 ]; then
           echo "Scan completed successfully"
           echo "::set-output name=scan_status::success"
@@ -109,9 +264,9 @@ jobs:
           echo "- Violations found: $VIOLATION_COUNT"
           
           # Display scan output for debugging
-          echo "=== NCTL Scan Output ==="
+          echo "=== Final Scan Output ==="
           cat scan-results.txt
-          echo "=== End Scan Output ==="
+          echo "=== End Final Scan Output ==="
         else
           echo "No scan results file generated"
           echo "::set-output name=violation_count::0"

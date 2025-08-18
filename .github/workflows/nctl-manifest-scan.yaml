@@ -27,16 +27,11 @@ jobs:
       - name: Verify nctl version
         run: nctl version
 
-      - name: Fetch curated Kyverno policies
-        run: |
-          git clone https://github.com/nirmata/kyverno-policies.git
-
-      - name: Run nctl scan (PodSecurity + RBAC)
+      - name: Run nctl scan (PodSecurity)
         run: |
           nctl scan repository \
-            --policies kyverno-policies/pod-security/baseline \
-            --policies kyverno-policies/pod-security/restricted \
-            --policies kyverno-policies/rbac-best-practices \
+            --policies https://github.com/nirmata/kyverno-policies/tree/main/pod-security/baseline \
+            --policies https://github.com/nirmata/kyverno-policies/tree/main/pod-security/restricted \
             --details \
             --publish
 

@@ -1,311 +1,38 @@
-name: NCTL Manifest Security Scan
+name: Nirmata nctl Scan (Kyverno Pod Security & RBAC)
 
 on:
-  push:
-    branches: [ main, master, develop ]
-    paths:
-      - 'manifests/**'
   pull_request:
-    branches: [ main, master, develop ]
-    paths:
-      - 'manifests/**'
-  workflow_dispatch:
-    inputs:
-      scan_type:
-        description: 'Type of scan to perform'
-        required: true
-        default: 'all'
-        type: choice
-        options:
-          - all
-          - pss-baseline
-          - pss-restricted
-          - rbac-best-practices
-
-env:
-  NIRMATA_TOKEN: ${{ secrets.NIRMATA_TOKEN }}
-  NIRMATA_URL: ${{ secrets.NIRMATA_URL }}
-  NIRMATA_USERID: ${{ secrets.NIRMATA_USERID }}
+    branches: [ main ]
+  push:
+    branches: [ main ]
+  # Optionally, schedule regular scans:
+  schedule:
+    - cron: '0 0 * * *'  # runs daily at midnight UTC
 
 jobs:
-  nctl-manifest-scan:
-    name: NCTL Manifest Security Scan
+  scan:
+    name: Scan with nctl
     runs-on: ubuntu-latest
-    
+
+    env:
+      NIRMATA_TOKEN: ${{ secrets.NIRMATA_TOKEN }}
+      NIRMATA_URL: ${{ secrets.NIRMATA_URL }}
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        
-    - name: Setup Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-        
-    - name: Install nctl-scan
-      uses: nirmata/action-install-nctl-scan@v0.0.6
-      env:
-        NIRMATA_TOKEN: ${{ env.NIRMATA_TOKEN }}
-        NIRMATA_URL: ${{ env.NIRMATA_URL }}
-        
-    - name: Login to Nirmata
-      run: |
-        echo "Logging into Nirmata Control Hub..."
-        nctl login --url $NIRMATA_URL --userid $NIRMATA_USERID --token $NIRMATA_TOKEN
-        echo "Successfully logged into Nirmata Control Hub"
-        
-    - name: Verify NCTL Installation
-      run: |
-        echo "=== NCTL Environment Check ==="
-        echo "NCTL version:"
-        nctl version
-        echo "NCTL location:"
-        which nctl
-        echo "Available policy sets:"
-        nctl get policy-sets
-        echo "=== End NCTL Environment Check ==="
-        
-        # Additional NCTL verification
-        echo "=== Additional NCTL Verification ==="
-        echo "NCTL help for scan repository:"
-        nctl scan repository --help || echo "Help command failed"
-        echo ""
-        
-        echo "NCTL help for scan:"
-        nctl scan --help || echo "Scan help command failed"
-        echo ""
-        
-        echo "Checking if tree command is available:"
-        which tree || echo "Tree command not available, using find instead"
-        echo "=== End Additional NCTL Verification ==="
-        
-    - name: Scan Manifests with NCTL
-      id: scan
-      run: |
-        echo "Starting manifest security scan..."
-        echo "Current working directory: $(pwd)"
-        echo "Repository contents:"
-        ls -la
-        
-        echo "Scanning manifests folder: $(pwd)/manifests"
-        
-        # Check if manifests folder exists
-        if [ -d "manifests" ]; then
-          echo "Manifests folder found:"
-          ls -la manifests/
-          
-          # List files to be scanned
-          echo "Files to be scanned:"
-          find manifests -name "*.yaml" -o -name "*.yml" -o -name "*.tf" -o -name "Dockerfile*" | sort
-        else
-          echo "Manifests folder not found!"
-          exit 1
-        fi
-        
-        # Debug: Check environment variables (masked for security)
-        echo "=== Environment Variables ==="
-        echo "NIRMATA_URL: ${NIRMATA_URL:0:20}..."
-        echo "NIRMATA_USERID: ${NIRMATA_USERID:0:10}..."
-        echo "NIRMATA_TOKEN: ${NIRMATA_TOKEN:0:10}..."
-        echo "=== End Environment Variables ==="
-        
-        # Try a simple scan first to test basic functionality
-        echo "=== Testing Basic Scan ==="
-        echo "Running: nctl scan repository --help"
-        nctl scan repository --help || echo "Help command failed"
-        echo "=== End Basic Scan Test ==="
-        
-        # Perform comprehensive scan with specified policy sets
-        echo "Running NCTL scan with PSS and RBAC policies..."
-        echo "Command: nctl scan repository ./manifests --policy-sets pss-baseline,pss-restricted,rbac-best-practices,dockerfile-best-practices,ecs-tf-config-best-practices,s3-tf-config-best-practices"
-        
-        nctl scan repository ./manifests \
-          --policy-sets pss-baseline,pss-restricted,rbac-best-practices,dockerfile-best-practices,ecs-tf-config-best-practices,s3-tf-config-best-practices \
-          > scan-results.txt 2>&1
-        
-        # Check scan exit code
-        SCAN_EXIT_CODE=$?
-        echo "Scan exit code: $SCAN_EXIT_CODE"
-        
-        if [ $SCAN_EXIT_CODE -eq 0 ]; then
-          echo "Scan completed successfully"
-          echo "::set-output name=scan_status::success"
-        else
-          echo "Scan completed with violations or errors"
-          echo "::set-output name=scan_status::violations"
-        fi
-        
-        # Parse scan results for summary
-        if [ -f scan-results.txt ]; then
-          echo "Scan output saved to scan-results.txt"
-          
-          # Try to extract violation count from the output
-          VIOLATION_COUNT=$(grep -c "violation\|Violation\|VIOLATION" scan-results.txt 2>/dev/null || echo "0")
-          POLICY_COUNT=$(grep -c "policy\|Policy\|POLICY" scan-results.txt 2>/dev/null || echo "0")
-          
-          echo "::set-output name=violation_count::$VIOLATION_COUNT"
-          echo "::set-output name=policy_count::$POLICY_COUNT"
-          
-          echo "Scan Summary:"
-          echo "- Policies evaluated: $POLICY_COUNT"
-          echo "- Violations found: $VIOLATION_COUNT"
-          
-          # Display scan output for debugging
-          echo "=== NCTL Scan Output ==="
-          cat scan-results.txt
-          echo "=== End Scan Output ==="
-        else
-          echo "No scan results file generated"
-          echo "::set-output name=violation_count::0"
-          echo "::set-output name=policy_count::0"
-          
-          # Create a basic error file to ensure workflow continues
-          echo "Creating error results file..."
-          echo "=== Scan Error Results ===" > scan-results.txt
-          echo "Timestamp: $(date)" >> scan-results.txt
-          echo "Repository: ${{ github.repository }}" >> scan-results.txt
-          echo "Error: Scan failed with exit code $SCAN_EXIT_CODE" >> scan-results.txt
-          echo "No output file was generated by the scan command." >> scan-results.txt
-          echo "This suggests the nctl scan command failed completely." >> scan-results.txt
-        fi
-        
-    - name: Generate Scan Report
-      if: always()
-      run: |
-        echo "## 🔍 NCTL Manifest Security Scan Results" >> $GITHUB_STEP_SUMMARY
-        
-        if [ -f scan-results.txt ]; then
-          # Try to extract violation count from the output
-          VIOLATION_COUNT=$(grep -c "violation\|Violation\|VIOLATION" scan-results.txt 2>/dev/null || echo "0")
-          POLICY_COUNT=$(grep -c "policy\|Policy\|POLICY" scan-results.txt 2>/dev/null || echo "0")
-          
-          echo "### 📊 Scan Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- **Policies Evaluated:** $POLICY_COUNT" >> $GITHUB_STEP_SUMMARY
-          echo "- **Violations Found:** $VIOLATION_COUNT" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          if [ "$VIOLATION_COUNT" -gt 0 ]; then
-            echo "### ⚠️ Violations Detected" >> $GITHUB_STEP_SUMMARY
-            echo "Security violations were found during the scan. Please review and remediate these issues." >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            
-            # Extract violation details
-            echo "#### Violation Details:" >> $GITHUB_STEP_SUMMARY
-            grep -i "violation\|error\|failed" scan-results.txt | head -10 >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "- Unable to parse violation details" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "### ✅ No Violations Found" >> $GITHUB_STEP_SUMMARY
-            echo "Great! No security violations were detected in this scan." >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          # Show scan output summary
-          echo "### 📋 Scan Output Summary" >> $GITHUB_STEP_SUMMARY
-          echo "Full scan output has been saved and can be viewed in the workflow logs." >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-        else
-          echo "### ❌ Scan Results Unavailable" >> $GITHUB_STEP_SUMMARY
-          echo "Unable to generate scan report. Please check the workflow logs for details." >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-        fi
-        
-    - name: Provide NCH Integration Options
-      if: always()
-      run: |
-        echo "### 🔗 Nirmata Control Hub (NCH) Integration" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        
-        # Generate NCH links based on repository
-        REPO_URL="https://github.com/${{ github.repository }}"
-        NCH_BASE_URL="https://www.nirmata.io/webclient"
-        
-        echo "#### 📊 View Policy Violations" >> $GITHUB_STEP_SUMMARY
-        echo "Review detailed policy violation reports in NCH:" >> $GITHUB_STEP_SUMMARY
-        echo "- [View Repository Scan Reports]($NCH_BASE_URL/#clusters/policyReport/repositoryDetails?repo=$REPO_URL&backurl=clustersPolicyReport)" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        
-        echo "#### 🚨 Create Policy Exceptions" >> $GITHUB_STEP_SUMMARY
-        echo "Request policy exceptions for legitimate violations:" >> $GITHUB_STEP_SUMMARY
-        echo "- [Create Policy Exception]($NCH_BASE_URL/#clusters/policyReport/repositoryDetails?repo=$REPO_URL&backurl=clustersPolicyReport)" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        
-        echo "#### 🔧 View Remediations" >> $GITHUB_STEP_SUMMARY
-        echo "Access AI-powered remediation suggestions:" >> $GITHUB_STEP_SUMMARY
-        echo "- [View Remediations]($NCH_BASE_URL/#clusters/policyReport/repositoryDetails?repo=$REPO_URL&backurl=clustersPolicyReport)" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        
-        echo "**Note:** You must be logged into Nirmata Control Hub to access these links." >> $GITHUB_STEP_SUMMARY
-        
-    - name: Upload Scan Results
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: nctl-manifest-scan-results
-        path: |
-          scan-results.txt
-          .nctl/
-        retention-days: 30
-        
-    - name: Comment on PR
-      if: github.event_name == 'pull_request' && always()
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const { data: comments } = await github.rest.issues.listComments({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-          });
-          
-          const botComment = comments.find(comment => comment.user.type === 'Bot' && comment.body.includes('NCTL Manifest Security Scan'));
-          
-          const commentBody = `## 🔍 NCTL Manifest Security Scan Results
-          
-          **Repository:** \`${{ github.repository }}\`
-          **Branch:** \`${{ github.head_ref }}\`
-          **Commit:** \`${{ github.sha }}\`
-          
-          ### 📊 Scan Summary
-          - **Policies Evaluated:** ${{ steps.scan.outputs.policy_count || 'Unknown' }}
-          - **Violations Found:** ${{ steps.scan.outputs.violation_count || 'Unknown' }}
-          - **Scan Status:** ${{ steps.scan.outputs.scan_status || 'Unknown' }}
-          
-          ### 🔗 NCH Integration
-          - [📊 View Policy Violations](https://www.nirmata.io/webclient/#clusters/policyReport/repositoryDetails?repo=https%3A%2F%2Fgithub.com%2F${{ github.repository }}&backurl=clustersPolicyReport)
-          - [🚨 Create Policy Exception](https://www.nirmata.io/webclient/#clusters/policyReport/repositoryDetails?repo=https%3A%2F%2Fgithub.com%2F${{ github.repository }}&backurl=clustersPolicyReport)
-          - [🔧 View Remediations](https://www.nirmata.io/webclient/#clusters/policyReport/repositoryDetails?repo=https%3A%2F%2Fgithub.com%2F${{ github.repository }}&backurl=clustersPolicyReport)
-          
-          **Note:** You must be logged into Nirmata Control Hub to access these links.
-          
-          <details>
-          <summary>📋 Workflow Details</summary>
-          
-          - **Workflow:** [NCTL Manifest Security Scan](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-          - **Triggered by:** ${{ github.actor }}
-          - **Scan completed:** ${{ steps.scan.outputs.scan_status == 'success' && '✅ Successfully' || '⚠️ With violations' }}
-          
-          </details>`;
-          
-          if (botComment) {
-            await github.rest.issues.updateComment({
-              comment_id: botComment.id,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: commentBody,
-            });
-          } else {
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: commentBody,
-            });
-          }
-          
-    - name: Fail on Critical Violations
-      if: steps.scan.outputs.scan_status == 'violations' && github.event_name == 'pull_request'
-      run: |
-        echo "❌ Security violations detected! Please review and remediate before merging."
-        echo "Check the scan results above for details."
-        exit 1
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install nctl
+        uses: nirmata/action-install-nctl-scan@v0.0.11
+        # Latest release as of April 2025  [oai_citation:0‡GitHub](https://github.com/nirmata/action-install-nctl-scan?utm_source=chatgpt.com)
+
+      - name: Verify nctl version
+        run: nctl version
+
+      - name: Run nctl scan — Pod-Security baseline + restricted, RBAC
+        run: |
+          nctl scan repository \
+            --policies kyverno-policies/pod-security \
+            --policies kyverno-policies/rbac-best-practices \
+            --details \
+            --publish

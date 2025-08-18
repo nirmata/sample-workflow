@@ -1,4 +1,4 @@
-name: Nirmata nctl Scan (Kyverno PodSecurity & RBAC)
+name: Nirmata nctl Scan (PodSecurity Baseline & Restricted)
 
 on:
   pull_request:
@@ -31,15 +31,13 @@ jobs:
         run: |
           echo "NIRMATA_URL is: $NIRMATA_URL"
           echo "NIRMATA_TOKEN length: ${#NIRMATA_TOKEN}"
-      - name: Login to Nirmata
-        run: |
-          nctl login nch --url $NIRMATA_URL --token $NIRMATA_TOKEN
+
+#      - name: Login to Nirmata
+#        run: |
+#          nctl login nch --url $NIRMATA_URL --token $NIRMATA_TOKEN
       - name: Run nctl scan (PodSecurity)
         run: |
-          nctl scan repository \
-            --policies kyverno-policies/ \
-            --details \
-            --publish
+          nctl scan repository https://github.com/nirmata/sample-workflow.git --policies kyverno-policies/ --url $NIRMATA_URL --token $NIRMATA_TOKEN
 
       - name: Provide next steps
         run: |

@@ -37,7 +37,7 @@ jobs:
 #          nctl login nch --url $NIRMATA_URL --token $NIRMATA_TOKEN
       - name: Run nctl scan (PodSecurity)
         run: |
-          nctl scan repository https://github.com/nirmata/sample-workflow.git --policies kyverno-policies/ --url $NIRMATA_URL --token $NIRMATA_TOKEN
+          nctl scan repository --policies kyverno-policies/ --url $NIRMATA_URL --token $NIRMATA_TOKEN
 
       - name: Provide next steps
         run: |

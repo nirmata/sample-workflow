@@ -14,9 +14,10 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      NIRMATA_TOKEN: ${{ secrets.NIRMATA_TOKEN }}
+      NIRMATA_TEAM_TOKEN: ${{ secrets.NIRMATA_TEAM_TOKEN }}
+      NIRMATA_USER_TOKEN: ${{ secrets.NIRMATA_USER_TOKEN }}
       NIRMATA_URL: ${{ secrets.NIRMATA_URL }}
-
+      NIRMATA_USER_ID: ${{ secrets.NIRMATA_USERID }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -32,12 +33,12 @@ jobs:
           echo "NIRMATA_URL is: $NIRMATA_URL"
           echo "NIRMATA_TOKEN length: ${#NIRMATA_TOKEN}"
 
-#      - name: Login to Nirmata
-#        run: |
-#          nctl login nch --url $NIRMATA_URL --token $NIRMATA_TOKEN
+      - name: Login to Nirmata as a DevOps User
+        run: |
+          nctl login nch --url $NIRMATA_URL --token $NIRMATA_USER_TOKEN
       - name: Run nctl scan (PodSecurity)
         run: |
-          nctl scan repository --policies kyverno-policies/ --url $NIRMATA_URL --token $NIRMATA_TOKEN
+          nctl scan repository --policy-sets pss-baseline,pss-restricted --url $NIRMATA_URL --token $NIRMATA_TEAM_TOKEN
 
       - name: Provide next steps
         run: |

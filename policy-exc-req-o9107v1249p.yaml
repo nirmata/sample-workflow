@@ -1,0 +1,39 @@
+apiVersion: kyverno.io/v2beta1
+kind: PolicyException
+metadata:
+  labels:
+    cleanup.kyverno.io/ttl: 2025-08-28T194708Z
+  name: policy-exc-req-o9107v1249p-0
+  namespace: kyverno
+spec:
+  exceptions:
+  - policyName: require-run-as-non-root-user
+    ruleNames:
+    - run-as-non-root-user
+    - autogen-run-as-non-root-user
+  match:
+    any:
+    - resources:
+        kinds:
+        - Deployment
+        names:
+        - otel-agent
+        - nirmata-kube-controller
+        namespaces:
+        - nirmata
+    - resources:
+        kinds:
+        - Pod
+        names:
+        - nirmata-kube-controller-*
+        - otel-agent-*
+        namespaces:
+        - nirmata
+    - resources:
+        kinds:
+        - ReplicaSet
+        names:
+        - otel-agent-*
+        - nirmata-kube-controller-*
+        namespaces:
+        - nirmata

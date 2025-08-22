@@ -37,12 +37,12 @@ jobs:
 #        run: |
 #          nctl login nch --url $NIRMATA_URL --token $NIRMATA_USER_TOKEN
 
-#      - name: Login to Nirmata as a DevOps User
-#        env:
-#          NIRMATA_TOKEN: ${{ secrets.NIRMATA_USER_TOKEN }}
-#        run: |
-#          echo "Running with user token..."
-#          nctl whoami
+      - name: Login to Nirmata as a DevOps User
+        env:
+          NIRMATA_TOKEN: ${{ secrets.NIRMATA_USER_TOKEN }}
+        run: |
+          echo "Running with user token..."
+          nctl version
 
       - name: Run nctl scan (PodSecurity)
         env:

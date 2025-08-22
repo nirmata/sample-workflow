@@ -54,7 +54,7 @@ jobs:
           set -e
 
           if [ $status -ne 0 ] && [ $status -ne 1 ]; then
-            echo "❌ nctl scan failed with (status $status)"
+            echo "nctl scan failed with (status $status)"
             exit $status
           fi
 
@@ -65,12 +65,12 @@ jobs:
 
       - name: Provide next steps
         run: |
-          echo "✅ NCTL scan completed."
+          echo "NCTL scan completed."
           echo ""
-          echo "👉 Review policy violations here:"
-          echo "   https://www.nirmata.io/webclient/#clusters/policyReport/repositoryDetails?repo=https%3A%2F%2Fgithub.com%2Fnirmata%2Fsample-polex&backurl=clustersPolicyReport%2Frepositories&filter.status.value=fail"
+          echo "* Review policy violations here:"
+          echo "   https://www.nirmata.io/webclient/#clusters/policyReport/repositoryDetails?repo=https%3A%2F%2Fgithub.com%2Fnirmata%2Fsample-workflow&backurl=clustersPolicyReport%2Frepositories&filter.status.value=fail"
           echo ""
-          echo "👉 Create policy exceptions here:"
-          echo "   https://www.nirmata.io/webclient/#clusters/policyReport/repositoryDetails?repo=https%3A%2F%2Fgithub.com%2Fnirmata%2Fsample-polex&backurl=clustersPolicyReport%2Frepositories&filter.status.value=fail"
+          echo "* Create policy exceptions here:"
+          echo "   https://www.nirmata.io/webclient/#clusters/policyReport/repositoryDetails?repo=https%3A%2F%2Fgithub.com%2Fnirmata%2Fsample-workflow&backurl=clustersPolicyReport%2Frepositories&filter.status.value=fail"
           echo ""
-          echo "📊 Results are also available in the Nirmata Control Hub."
+          echo "* Results are also available in the Nirmata Control Hub."

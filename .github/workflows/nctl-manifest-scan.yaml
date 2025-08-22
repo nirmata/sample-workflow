@@ -5,8 +5,8 @@ on:
     branches: [ main ]
   push:
     branches: [ main ]
-  schedule:
-    - cron: '0 0 * * *' # daily scan at midnight UTC
+#  schedule:
+#    - cron: '0 0 * * *' # daily scan at midnight UTC
 
 jobs:
   scan:
@@ -14,10 +14,10 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      NIRMATA_TEAM_TOKEN: ${{ secrets.NIRMATA_TEAM_TOKEN }}
-      NIRMATA_USER_TOKEN: ${{ secrets.NIRMATA_USER_TOKEN }}
+#      NIRMATA_TEAM_TOKEN: ${{ secrets.NIRMATA_TEAM_TOKEN }}
+#      NIRMATA_USER_TOKEN: ${{ secrets.NIRMATA_USER_TOKEN }}
+#      NIRMATA_USER_ID: ${{ secrets.NIRMATA_USERID }}
       NIRMATA_URL: ${{ secrets.NIRMATA_URL }}
-      NIRMATA_USER_ID: ${{ secrets.NIRMATA_USERID }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -33,10 +33,20 @@ jobs:
           echo "NIRMATA_URL is: $NIRMATA_URL"
           echo "NIRMATA_TOKEN length: ${#NIRMATA_TOKEN}"
 
+#      - name: Login to Nirmata as a DevOps User
+#        run: |
+#          nctl login nch --url $NIRMATA_URL --token $NIRMATA_USER_TOKEN
+
       - name: Login to Nirmata as a DevOps User
+        env:
+          NIRMATA_TOKEN: ${{ secrets.NIRMATA_USER_TOKEN }}
         run: |
-          nctl login nch --url $NIRMATA_URL --token $NIRMATA_USER_TOKEN
+          echo "Running with user token..."
+          nctl whoami
+
       - name: Run nctl scan (PodSecurity)
+        env:
+          NIRMATA_TOKEN: ${{ secrets.NIRMATA_TEAM_TOKEN }}
         run: |
           nctl scan repository --policy-sets pss-baseline,pss-restricted --url $NIRMATA_URL --token $NIRMATA_TEAM_TOKEN
 

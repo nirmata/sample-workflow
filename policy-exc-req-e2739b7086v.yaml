@@ -1,0 +1,59 @@
+apiVersion: kyverno.io/v2beta1
+kind: PolicyException
+metadata:
+  labels:
+    cleanup.kyverno.io/ttl: 2025-08-23T161231Z
+  name: policy-exc-req-e2739b7086v-0
+  namespace: kyverno
+spec:
+  exceptions:
+  - policyName: restrict-volume-types
+    ruleNames:
+    - restricted-volumes
+    - autogen-restricted-volumes
+  match:
+    any:
+    - resources:
+        kinds:
+        - Deployment
+        names:
+        - argocd-applicationset-controller
+        - argocd-repo-server
+        - argocd-server
+        - argocd-dex-server
+        - argocd-notifications-controller
+        - argocd-redis
+        namespaces:
+        - argocd
+    - resources:
+        kinds:
+        - StatefulSet
+        names:
+        - argocd-application-controller
+        namespaces:
+        - argocd
+    - resources:
+        kinds:
+        - ReplicaSet
+        names:
+        - argocd-notifications-controller-*
+        - argocd-repo-server-*
+        - argocd-server-*
+        - argocd-applicationset-controller-*
+        - argocd-dex-server-*
+        - argocd-redis-*
+        namespaces:
+        - argocd
+    - resources:
+        kinds:
+        - Pod
+        names:
+        - argocd-notifications-controller-*
+        - argocd-repo-server-*
+        - argocd-application-controller-*
+        - argocd-applicationset-controller-*
+        - argocd-dex-server-*
+        - argocd-redis-*
+        - argocd-server-*
+        namespaces:
+        - argocd

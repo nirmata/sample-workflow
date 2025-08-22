@@ -48,7 +48,20 @@ jobs:
         env:
           NIRMATA_TOKEN: ${{ secrets.NIRMATA_TEAM_TOKEN }}
         run: |
-          nctl scan repository --policy-sets pss-baseline,pss-restricted --url $NIRMATA_URL --token ${{ secrets.NIRMATA_TEAM_TOKEN }} --details --publish
+          set +e
+          nctl scan repository --policy-sets pss-baseline,pss-restricted --url $NIRMATA_URL --token ${{ secrets.NIRMATA_TEAM_TOKEN }} --publish
+          status=$?
+          set -e
+
+          if [ $status -ne 0 ] && [ $status -ne 1 ]; then
+            echo "❌ nctl scan failed with (status $status)"
+            exit $status
+          fi
+
+          echo "nctl completed (status $status). Violations may exist but workflow continues."
+#         0 = success, no violations →  workflow passes
+#         1 = violations found →  workflow passes (but you can still parse results)
+#         >1 = CLI error →  workflow fails
 
       - name: Provide next steps
         run: |

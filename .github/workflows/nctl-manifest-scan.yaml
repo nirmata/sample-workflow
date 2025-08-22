@@ -48,7 +48,7 @@ jobs:
         env:
           NIRMATA_TOKEN: ${{ secrets.NIRMATA_TEAM_TOKEN }}
         run: |
-          nctl scan repository --policy-sets pss-baseline,pss-restricted --url $NIRMATA_URL --token $NIRMATA_TEAM_TOKEN
+          nctl scan repository --policy-sets pss-baseline,pss-restricted --url $NIRMATA_URL --token ${{ secrets.NIRMATA_TEAM_TOKEN }} --details --publish
 
       - name: Provide next steps
         run: |

@@ -23,15 +23,15 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install nctl
-        uses: nirmata/action-install-nctl-scan@v0.0.11
+        uses: nirmata/action-install-nctl-scan@v0.0.12
 
       - name: Verify nctl version
         run: nctl version
 
-      - name: Debug check env (safe)
-        run: |
-          echo "NIRMATA_URL is: $NIRMATA_URL"
-          echo "NIRMATA_TOKEN length: ${#NIRMATA_TOKEN}"
+#      - name: Debug check env (safe)
+#        run: |
+#          echo "NIRMATA_URL is: $NIRMATA_URL"
+#          echo "NIRMATA_TOKEN length: ${#NIRMATA_TOKEN}"
 
 #      - name: Login to Nirmata as a DevOps User
 #        run: |

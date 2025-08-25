@@ -1,8 +1,8 @@
 name: Nirmata nctl Scan (PodSecurity Baseline & Restricted)
 
 on:
-  pull_request:
-    branches: [ main ]
+#  pull_request:
+#    branches: [ main ]
   push:
     branches: [ main ]
 #  schedule:
@@ -62,6 +62,11 @@ jobs:
 #         0 = success, no violations →  workflow passes
 #         1 = violations found →  workflow passes (but you can still parse results)
 #         >1 = CLI error →  workflow fails
+
+      - name: Remediate Violations
+        run: |
+          echo "Remediating violations..."
+          nctl scan repository . --remediate show
 
       - name: Provide next steps
         run: |

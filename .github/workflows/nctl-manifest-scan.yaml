@@ -63,10 +63,10 @@ jobs:
 #         1 = violations found →  workflow passes (but you can still parse results)
 #         >1 = CLI error →  workflow fails
 
-      - name: Remediate Violations
-        run: |
-          echo "Remediating violations..."
-          nctl scan repository . --remediate show
+#      - name: Remediate Violations
+#        run: |
+#          echo "Remediating violations..."
+#          nctl scan repository . --remediate show
 
       - name: Provide next steps
         run: |

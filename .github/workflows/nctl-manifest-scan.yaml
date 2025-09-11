@@ -68,17 +68,36 @@ jobs:
 #          echo "Remediating violations..."
 #          nctl scan repository . --remediate show
 
-      - name: Provide next steps
+      # - name: Provide next steps
+      #   run: |
+      #     echo "NCTL scan completed."
+
+      #     REPO_URL="https://github.com/${{ github.repository }}"
+      #     BASE_URL="${{ secrets.NIRMATA_URL }}/webclient/#clusters/policyReport/repositoryDetails?repo=${REPO_URL}&backurl=clustersPolicyReport/repositories&filter.status.value=fail"
+
+      #     echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "## 🚀 Next Steps" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "- [🔍 Review policy violations here](${BASE_URL})" >> $GITHUB_STEP_SUMMARY
+      #     echo "- [📝 Create policy exceptions here](${BASE_URL})" >> $GITHUB_STEP_SUMMARY
+      #     echo "" >> $GITHUB_STEP_SUMMARY
+      #     echo "Results are also available in the **Nirmata Control Hub**." >> $GITHUB_STEP_SUMMARY
+      - name: Post NCTL Scan Summary
         run: |
           echo "NCTL scan completed."
 
           REPO_URL="https://github.com/${{ github.repository }}"
-          BASE_URL="${{ secrets.NIRMATA_URL }}/webclient/#clusters/policyReport/repositoryDetails?repo=${REPO_URL}&backurl=clustersPolicyReport/repositories&filter.status.value=fail"
+          # URL encode repo URL to avoid 404
+          ENCODED_REPO=$(echo -n "$REPO_URL" | jq -sRr @uri)
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 🚀 Next Steps" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- [🔍 Review policy violations here](${BASE_URL})" >> $GITHUB_STEP_SUMMARY
-          echo "- [📝 Create policy exceptions here](${BASE_URL})" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Results are also available in the **Nirmata Control Hub**." >> $GITHUB_STEP_SUMMARY
+          BASE_URL="${{ secrets.NIRMATA_URL }}/webclient/#clusters/policyReport/repositoryDetails?repo=${ENCODED_REPO}&backurl=clustersPolicyReport/repositories&filter.status.value=fail"
+
+          {
+            echo ""
+            echo "## 🚀 Next Steps"
+            echo ""
+            echo "- [🔍 Review policy violations here](${BASE_URL})"
+            echo "- [📝 Create policy exceptions here](${BASE_URL})"
+            echo ""
+            echo "Results are also available in the **Nirmata Control Hub**."
+          } >> $GITHUB_STEP_SUMMARY      

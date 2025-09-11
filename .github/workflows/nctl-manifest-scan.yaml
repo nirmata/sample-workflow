@@ -86,11 +86,11 @@ jobs:
         run: |
           echo "NCTL scan completed."
 
-          REPO_URL="https://github.com/${{ github.repository }}"
-          # URL encode repo URL to avoid 404
-          ENCODED_REPO=$(echo -n "$REPO_URL" | jq -sRr @uri)
-
-          BASE_URL="${{ secrets.NIRMATA_URL }}/webclient/#clusters/policyReport/repositoryDetails?repo=${ENCODED_REPO}&backurl=clustersPolicyReport/repositories&filter.status.value=fail"
+          # Get repository URL for NCH integration (using GitHub's server_url for reliability)
+          REPO_URL="${{ github.server_url }}/${{ github.repository }}"
+          
+          # Construct the Nirmata webclient URL (using the standard Nirmata URL pattern)
+          BASE_URL="https://www.nirmata.io/webclient/#clusters/policyReport/repositoryDetails?repo=$REPO_URL&backurl=clustersPolicyReport"
 
           {
             echo ""

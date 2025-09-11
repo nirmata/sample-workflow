@@ -10,12 +10,6 @@ This directory contains sample manifest files that intentionally violate various
 
 ```
 manifests/
-├── docker/                    # Dockerfile violations
-│   ├── insecure-dockerfile
-│   └── multi-stage-insecure-dockerfile
-├── terraform/                 # Terraform violations
-│   ├── insecure-eks.tf
-│   └── insecure-infrastructure.tf
 ├── kubernetes/                # Kubernetes manifest violations
 │   ├── pod-security-violations.yaml
 │   ├── workload-security-violations.yaml
@@ -54,48 +48,18 @@ manifests/
 - **Privileged bindings**: Binding overly permissive roles to default service accounts
 - **IAM role annotations**: Service accounts with privileged AWS IAM roles
 
-### 5. Dockerfile Violations (`docker/`)
-
-- **Root execution**: Running containers as root user
-- **Unpinned versions**: Using `latest` tags and unpinned package versions
-- **Insecure permissions**: Setting `chmod 777` on application directories
-- **Shell access**: Providing shell access in production containers
-- **Privileged capabilities**: Adding dangerous Linux capabilities
-
-### 6. Terraform Violations (`terraform/`)
-
-- **Public access**: EKS clusters with public endpoint access
-- **Overly permissive IAM**: IAM roles with `*` actions and resources
-- **Public subnets**: Auto-assigning public IPs to instances
-- **Open security groups**: Security groups allowing all inbound/outbound traffic
-- **Public S3 buckets**: S3 buckets with public read access
-- **Hardcoded credentials**: User data scripts with plaintext passwords
 
 ## Testing Kyverno Policies
 
 These manifests can be used to test the following Kyverno policy categories:
 
 1. **Pod Security Policies** - Test enforcement of container security standards
-2. **Dockerfile Best Practices** - Validate container image security policies
-3. **Workload Security** - Test application-level security controls
-4. **RBAC Best Practices** - Validate Kubernetes access control policies
 
 ## Usage Examples
 
 ### Test Pod Security Policies
 ```bash
 kubectl apply -f kubernetes/pod-security-violations.yaml
-```
-
-### Test Dockerfile Policies
-```bash
-docker build -f docker/insecure-dockerfile .
-```
-
-### Test Terraform Policies
-```bash
-terraform init
-terraform plan -f terraform/insecure-eks.tf
 ```
 
 ## Remediation

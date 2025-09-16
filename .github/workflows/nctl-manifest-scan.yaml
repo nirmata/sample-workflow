@@ -59,19 +59,7 @@ jobs:
 
       - name: Post NCTL Scan Summary
         run: |
-          echo "NCTL scan completed."
-
-          # Get repository slug for Nirmata URL (owner/repo)
           REPO_SLUG="${{ github.repository }}"
-          # Construct Nirmata Control Hub URL using repo slug, not full GitHub URL
           BASE_URL="https://www.nirmata.io/webclient/#clusters/policyReport/repositoryDetails?repo=${REPO_SLUG}&backurl=clustersPolicyReport"
-
-          {
-            echo ""
-            echo "## 🚀 Next Steps"
-            echo ""
-            echo "- [🔍 Review policy violations here](${BASE_URL})"
-            echo "- [📝 Create policy exceptions here](${BASE_URL})"
-            echo ""
-            echo "Results are also available in the **Nirmata Control Hub**."
-          } >> $GITHUB_STEP_SUMMARY
+          echo "- [🔍 Review Policy Violations](${BASE_URL})" >> $GITHUB_STEP_SUMMARY
+          echo "- [🔍 Request Policy Exceptions](${BASE_URL})" >> $GITHUB_STEP_SUMMARY

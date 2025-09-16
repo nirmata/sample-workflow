@@ -1,12 +1,12 @@
 name: Nirmata nctl Scan (PodSecurity Baseline & Restricted)
 
 on:
-#  pull_request:
-#    branches: [ main ]
   push:
     branches: [ main ]
-#  schedule:
-#    - cron: '0 0 * * *' # daily scan at midnight UTC
+  # pull_request:
+  #   branches: [ main ]
+  # schedule:
+  #   - cron: '0 0 * * *' # daily scan at midnight UTC
 
 jobs:
   scan:
@@ -14,9 +14,9 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-#      NIRMATA_TEAM_TOKEN: ${{ secrets.NIRMATA_TEAM_TOKEN }}
-#      NIRMATA_USER_TOKEN: ${{ secrets.NIRMATA_USER_TOKEN }}
-#      NIRMATA_USER_ID: ${{ secrets.NIRMATA_USERID }}
+      # NIRMATA_TEAM_TOKEN: ${{ secrets.NIRMATA_TEAM_TOKEN }}
+      # NIRMATA_USER_TOKEN: ${{ secrets.NIRMATA_USER_TOKEN }}
+      # NIRMATA_USER_ID: ${{ secrets.NIRMATA_USERID }}
       NIRMATA_URL: ${{ secrets.NIRMATA_URL }}
     steps:
       - name: Checkout repository
@@ -27,15 +27,6 @@ jobs:
 
       - name: Verify nctl version
         run: nctl version
-
-#      - name: Debug check env (safe)
-#        run: |
-#          echo "NIRMATA_URL is: $NIRMATA_URL"
-#          echo "NIRMATA_TOKEN length: ${#NIRMATA_TOKEN}"
-
-#      - name: Login to Nirmata as a DevOps User
-#        run: |
-#          nctl login nch --url $NIRMATA_URL --token $NIRMATA_USER_TOKEN
 
       - name: Login to Nirmata as a DevOps User
         env:
@@ -62,40 +53,18 @@ jobs:
           fi
 
           echo "nctl completed (status $status). Violations may exist but workflow continues."
-#         0 = success, no violations →  workflow passes
-#         1 = violations found →  workflow passes (but you can still parse results)
-#         >1 = CLI error →  workflow fails
+          # 0 = success, no violations → workflow passes
+          # 1 = violations found → workflow passes (but you can still parse results)
+          # >1 = CLI error → workflow fails
 
-#      - name: Remediate Violations
-#        run: |
-#          echo "Remediating violations..."
-#          nctl scan repository . --remediate show
-
-      # - name: Provide next steps
-      #   run: |
-      #     echo "NCTL scan completed."
-
-      #     REPO_URL="https://github.com/${{ github.repository }}"
-      #     BASE_URL="${{ secrets.NIRMATA_URL }}/webclient/#clusters/policyReport/repositoryDetails?repo=${REPO_URL}&backurl=clustersPolicyReport/repositories&filter.status.value=fail"
-
-      #     echo "" >> $GITHUB_STEP_SUMMARY
-      #     echo "## 🚀 Next Steps" >> $GITHUB_STEP_SUMMARY
-      #     echo "" >> $GITHUB_STEP_SUMMARY
-      #     echo "- [🔍 Review policy violations here](${BASE_URL})" >> $GITHUB_STEP_SUMMARY
-      #     echo "- [📝 Create policy exceptions here](${BASE_URL})" >> $GITHUB_STEP_SUMMARY
-      #     echo "" >> $GITHUB_STEP_SUMMARY
-      #     echo "Results are also available in the **Nirmata Control Hub**." >> $GITHUB_STEP_SUMMARY
       - name: Post NCTL Scan Summary
         run: |
           echo "NCTL scan completed."
 
-          # Get repository URL for NCH integration (using GitHub's server_url for reliability)
-          REPO_URL="${{ github.server_url }}/${{ github.repository }}"
-          echo "DEBUG: REPO_URL = $REPO_URL"
-          
-          # Construct the Nirmata webclient URL (using the standard Nirmata URL pattern)
-          BASE_URL="https://www.nirmata.io/webclient/#clusters/policyReport/repositoryDetails?repo=$REPO_URL&backurl=clustersPolicyReport"
-          echo "DEBUG: BASE_URL = $BASE_URL"
+          # Get repository slug for Nirmata URL (owner/repo)
+          REPO_SLUG="${{ github.repository }}"
+          # Construct Nirmata Control Hub URL using repo slug, not full GitHub URL
+          BASE_URL="https://www.nirmata.io/webclient/#clusters/policyReport/repositoryDetails?repo=${REPO_SLUG}&backurl=clustersPolicyReport"
 
           {
             echo ""
@@ -105,4 +74,4 @@ jobs:
             echo "- [📝 Create policy exceptions here](${BASE_URL})"
             echo ""
             echo "Results are also available in the **Nirmata Control Hub**."
-          } >> $GITHUB_STEP_SUMMARY      
+          } >> $GITHUB_STEP_SUMMARY

@@ -61,5 +61,7 @@ jobs:
         run: |
           REPO_SLUG="${{ github.repository }}"
           BASE_URL="https://www.nirmata.io/webclient/#clusters/policyReport/repositoryDetails?repo=${REPO_SLUG}&backurl=clustersPolicyReport"
-          echo "- [🔍 Review Policy Violations](${BASE_URL})" >> $GITHUB_STEP_SUMMARY
-          echo "- [🔍 Request Policy Exceptions](${BASE_URL})" >> $GITHUB_STEP_SUMMARY
+          echo '<a href="https://www.nirmata.io/webclient/#clusters/policyReport/repositoryDetails?repo=${REPO_SLUG}&backurl=clustersPolicyReport">Review Policy Violations</a>' >> $GITHUB_STEP_SUMMARY
+          echo '<a href="https://www.nirmata.io/webclient/#clusters/policyReport/repositoryDetails?repo=${REPO_SLUG}&backurl=clustersPolicyReport">Request Policy Exceptions</a>' >> $GITHUB_STEP_SUMMARY
+          # echo "- [🔍 Review Policy Violations](${BASE_URL})" >> $GITHUB_STEP_SUMMARY
+          # echo "- [🔍 Request Policy Exceptions](${BASE_URL})" >> $GITHUB_STEP_SUMMARY

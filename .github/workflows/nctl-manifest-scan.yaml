@@ -57,11 +57,8 @@ jobs:
           # 1 = violations found → workflow passes (but you can still parse results)
           # >1 = CLI error → workflow fails
 
-      - name: Post NCTL Scan Summary
+      - name: Post NCTL Run Summary
         run: |
-          REPO_SLUG="${{ github.repository }}"
-          BASE_URL=$NIRMATA_URL
-          echo '<a href=$NIRMATA_URL>Review Policy Violations</a>' >> $GITHUB_STEP_SUMMARY
-          echo '<a href=$NIRMATA_URL>Request Policy Exceptions</a>' >> $GITHUB_STEP_SUMMARY
-          # echo "- [🔍 Review Policy Violations](${BASE_URL})" >> $GITHUB_STEP_SUMMARY
-          # echo "- [🔍 Request Policy Exceptions](${BASE_URL})" >> $GITHUB_STEP_SUMMARY
+          echo "### Nirmata Scan Report" >> $GITHUB_STEP_SUMMARY
+          echo "[Review Policy Violations](https://nirmata.io/webclient/#clusters/policyReport/repositoryDetails?repo=https%3A%2F%2Fgithub.com%2Fnirmata%2Fsample-polex&backurl=clustersPolicyReport%2Frepositories&filter.status.value=fail)" >> $GITHUB_STEP_SUMMARY
+          echo "[Request Policy Exceptions](https://nirmata.io/webclient/#clusters/policyReport/repositoryDetails?repo=https%3A%2F%2Fgithub.com%2Fnirmata%2Fsample-polex&backurl=clustersPolicyReport%2Frepositories&filter.status.value=fail)" >> $GITHUB_STEP_SUMMARY

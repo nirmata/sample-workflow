@@ -1,2 +1,2 @@
 # sample-workflow
-sample commit 123
+sample commit

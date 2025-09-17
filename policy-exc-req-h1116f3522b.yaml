@@ -1,0 +1,59 @@
+apiVersion: kyverno.io/v2beta1
+kind: PolicyException
+metadata:
+  labels:
+    cleanup.kyverno.io/ttl: 2025-09-24T163037Z
+  name: policy-exc-req-h1116f3522b-0
+  namespace: kyverno
+spec:
+  exceptions:
+  - policyName: disallow-capabilities
+    ruleNames:
+    - adding-capabilities
+    - autogen-adding-capabilities
+  match:
+    any:
+    - resources:
+        kinds:
+        - Pod
+        names:
+        - argocd-application-controller-*
+        - argocd-repo-server-*
+        - argocd-redis-*
+        - argocd-server-*
+        - argocd-dex-server-*
+        - argocd-applicationset-controller-*
+        - argocd-notifications-controller-*
+        namespaces:
+        - argocd
+    - resources:
+        kinds:
+        - ReplicaSet
+        names:
+        - argocd-applicationset-controller-*
+        - argocd-server-*
+        - argocd-repo-server-*
+        - argocd-notifications-controller-*
+        - argocd-redis-*
+        - argocd-dex-server-*
+        namespaces:
+        - argocd
+    - resources:
+        kinds:
+        - Deployment
+        names:
+        - argocd-redis
+        - argocd-applicationset-controller
+        - argocd-notifications-controller
+        - argocd-server
+        - argocd-dex-server
+        - argocd-repo-server
+        namespaces:
+        - argocd
+    - resources:
+        kinds:
+        - StatefulSet
+        names:
+        - argocd-application-controller
+        namespaces:
+        - argocd

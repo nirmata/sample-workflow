@@ -1,0 +1,67 @@
+apiVersion: kyverno.io/v2beta1
+kind: PolicyException
+metadata:
+  labels:
+    cleanup.kyverno.io/ttl: 2025-09-18T151459Z
+  name: policy-exc-req-d6015h6281c-0
+  namespace: kyverno
+spec:
+  exceptions:
+  - policyName: disallow-privileged-containers
+    ruleNames:
+    - privileged-containers
+    - autogen-privileged-containers
+  - policyName: disallow-host-path
+    ruleNames:
+    - host-path
+    - autogen-host-path
+  - policyName: disallow-capabilities-strict
+    ruleNames:
+    - require-drop-all
+    - autogen-require-drop-all
+  match:
+    any:
+    - resources:
+        kinds:
+        - ReplicaSet
+        names:
+        - argocd-server-*
+        - argocd-notifications-controller-*
+        - argocd-dex-server-*
+        - argocd-redis-*
+        - argocd-repo-server-*
+        - argocd-applicationset-controller-*
+        namespaces:
+        - argocd
+    - resources:
+        kinds:
+        - StatefulSet
+        names:
+        - argocd-application-controller
+        namespaces:
+        - argocd
+    - resources:
+        kinds:
+        - Deployment
+        names:
+        - argocd-applicationset-controller
+        - argocd-redis
+        - argocd-repo-server
+        - argocd-notifications-controller
+        - argocd-dex-server
+        - argocd-server
+        namespaces:
+        - argocd
+    - resources:
+        kinds:
+        - Pod
+        names:
+        - argocd-server-*
+        - argocd-dex-server-*
+        - argocd-redis-*
+        - argocd-applicationset-controller-*
+        - argocd-notifications-controller-*
+        - argocd-repo-server-*
+        - argocd-application-controller-*
+        namespaces:
+        - argocd

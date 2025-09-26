@@ -1,0 +1,59 @@
+apiVersion: kyverno.io/v2beta1
+kind: PolicyException
+metadata:
+  labels:
+    cleanup.kyverno.io/ttl: 2025-10-03T131642Z
+  name: policy-exc-req-m2552s8309f-0
+  namespace: kyverno
+spec:
+  exceptions:
+  - policyName: disallow-privilege-escalation
+    ruleNames:
+    - privilege-escalation
+    - autogen-privilege-escalation
+  match:
+    any:
+    - resources:
+        kinds:
+        - Deployment
+        names:
+        - argocd-server
+        - argocd-notifications-controller
+        - argocd-applicationset-controller
+        - argocd-redis
+        - argocd-repo-server
+        - argocd-dex-server
+        namespaces:
+        - argocd
+    - resources:
+        kinds:
+        - StatefulSet
+        names:
+        - argocd-application-controller
+        namespaces:
+        - argocd
+    - resources:
+        kinds:
+        - Pod
+        names:
+        - argocd-dex-server-*
+        - argocd-server-*
+        - argocd-applicationset-controller-*
+        - argocd-repo-server-*
+        - argocd-notifications-controller-*
+        - argocd-application-controller-*
+        - argocd-redis-*
+        namespaces:
+        - argocd
+    - resources:
+        kinds:
+        - ReplicaSet
+        names:
+        - argocd-repo-server-*
+        - argocd-notifications-controller-*
+        - argocd-redis-*
+        - argocd-dex-server-*
+        - argocd-server-*
+        - argocd-applicationset-controller-*
+        namespaces:
+        - argocd

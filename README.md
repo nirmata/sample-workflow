@@ -1,2 +1,2 @@
-# sample-workflow.
+# sample-workflow
 sample commit

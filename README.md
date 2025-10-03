@@ -1,2 +1,1 @@
 # sample-workflow
-sample commit.

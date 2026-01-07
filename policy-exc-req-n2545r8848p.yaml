@@ -1,0 +1,36 @@
+apiVersion: kyverno.io/v2beta1
+kind: PolicyException
+metadata:
+  labels:
+    cleanup.kyverno.io/ttl: 2025-11-11T190927Z
+  name: policy-exc-req-n2545r8848p-0
+  namespace: kyverno
+spec:
+  exceptions:
+  - policyName: restrict-volume-types
+    ruleNames:
+    - restricted-volumes
+    - autogen-restricted-volumes
+  match:
+    any:
+    - resources:
+        kinds:
+        - ReplicaSet
+        names:
+        - sample-*
+        namespaces:
+        - devtest
+    - resources:
+        kinds:
+        - Deployment
+        names:
+        - sample
+        namespaces:
+        - devtest
+    - resources:
+        kinds:
+        - Pod
+        names:
+        - sample-*
+        namespaces:
+        - devtest

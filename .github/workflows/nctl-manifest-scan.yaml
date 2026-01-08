@@ -23,7 +23,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install nctl
-        uses: nirmata/action-install-nctl-scan@v0.0.12
+        uses: nirmata/action-install-nctl-scan@v0.0.2
 
       - name: Verify nctl version
         run: nctl version

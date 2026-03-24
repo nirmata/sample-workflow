@@ -20,10 +20,10 @@ jobs:
       NIRMATA_URL: ${{ secrets.NIRMATA_URL }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
 
       - name: Install nctl
-        uses: nirmata/action-install-nctl-scan@v0.0.12
+        uses: nirmata/action-install-nctl-scan@e3f14a6386e67f49baa9321bcddfef9388382004  # v0.0.12
 
       - name: Verify nctl version
         run: nctl version

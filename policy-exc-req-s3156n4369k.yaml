@@ -1,0 +1,36 @@
+apiVersion: kyverno.io/v2beta1
+kind: PolicyException
+metadata:
+  labels:
+    cleanup.kyverno.io/ttl: 2025-11-11T210124Z
+  name: policy-exc-req-s3156n4369k-0
+  namespace: kyverno
+spec:
+  exceptions:
+  - policyName: disallow-privileged-containers
+    ruleNames:
+    - privileged-containers
+    - autogen-privileged-containers
+  match:
+    any:
+    - resources:
+        kinds:
+        - ReplicaSet
+        names:
+        - sample-*
+        namespaces:
+        - devtest
+    - resources:
+        kinds:
+        - Deployment
+        names:
+        - sample
+        namespaces:
+        - devtest
+    - resources:
+        kinds:
+        - Pod
+        names:
+        - sample-*
+        namespaces:
+        - devtest

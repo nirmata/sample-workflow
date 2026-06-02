@@ -1,4 +1,4 @@
-# Sample Manifests with Security Violations
+# Sample Manifests with Security Violations.
 
 This directory contains sample manifest files that intentionally violate various Kyverno security policies. These files are designed for testing and educational purposes to demonstrate common security anti-patterns.
 

@@ -32,8 +32,12 @@ jobs:
         env:
           NIRMATA_TOKEN: ${{ secrets.NIRMATA_USER_TOKEN }}
         run: |
-          echo "Running with user token..."
-          nctl version
+          # echo "Running with user token..."
+          # nctl version
+          nctl login nch \
+            --userid ${{ secrets.NIRMATA_USERID }} \
+            --token ${{ secrets.NIRMATA_USER_TOKEN }} \
+            --url ${{ secrets.NIRMATA_URL }}          
 
       - name: Run nctl scan (PodSecurity)
         env:
